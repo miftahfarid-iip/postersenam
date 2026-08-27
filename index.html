@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pembuat Poster Senam</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 10px;
+      background-color: #eef2f5;
+      margin: 0;
+      color: #333;
+    }
+    .main-wrapper {
+      max-width: 480px;
+      margin: 0 auto;
+    }
+    /* PREVIEW STICKY: Diam di atas layar HP saat digulir */
+    .preview-container {
+      background: #ffffff;
+      padding: 10px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      position: sticky;
+      top: 10px;
+      z-index: 1000;
+      text-align: center;
+      margin-bottom: 15px;
+    }
+    /* Kotak pembungkus canvas agar aman saat di-zoom */
+    .canvas-scroll-box {
+      width: 100%;
+      max-height: 40vh;
+      overflow: auto; /* Bisa digeser jika gambar membesar */
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-top: 8px;
+      background: #f9f9f9;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      transition: transform 0.1s ease;
+    }
+    .form-container {
+      background: #ffffff;
+      padding: 15px;
+      border-radius: 16px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    h2 {
+      color: #1b4332;
+      margin-top: 0;
+      font-size: 18px;
+      text-align: center;
+    }
+    .input-group {
+      margin-bottom: 12px;
+      text-align: left;
+    }
+    label {
+      font-size: 13px;
+      font-weight: bold;
+      color: #2d6a4f;
+      display: block;
+      margin-bottom: 4px;
+    }
+    input[type="text"], input[type="file"] {
+      width: 100%;
+      padding: 10px;
+      font-size: 14px;
+      border: 2px solid #2d6a4f;
+      border-radius: 8px;
+      outline: none;
+    }
+    input[type="range"] {
+      width: 100%;
+      cursor: pointer;
+    }
+    input[type="text"]:focus {
+      border-color: #1b4332;
+      background-color: #f4fdf8;
+    }
+    .btn {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: bold;
+      color: white;
+      background-color: #2d6a4f;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(45, 106, 79, 0.3);
+      margin-top: 10px;
+    }
+    .btn:active {
+      background-color: #1b4332;
+    }
+    .info {
+      font-size: 11px;
+      color: #666;
+      margin-top: 6px;
+      text-align: center;
+    }
+    .zoom-btn-group {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 5px;
+    }
+    .zoom-btn-group button {
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: bold;
+      background-color: #e2e8f0;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .zoom-btn-group button:active {
+      background-color: #cbd5e1;
+    }
+  </style>
+</head>
+<body>
+
+<div class="main-wrapper">
+  
+  <!-- PREVIEW DI ATAS -->
+  <div class="preview-container">
+    <!-- Tombol Zoom dipindah ke atas agar tidak tertutup -->
+    <div class="zoom-btn-group">
+      <button onclick="ubahZoom(-0.2)">🔍- Perkecil</button>
+      <button onclick="resetZoom()">Reset</button>
+      <button onclick="ubahZoom(0.2)">🔍+ Perbesar</button>
+    </div>
+
+    <div class="canvas-scroll-box" id="scrollBox">
+      <canvas id="posterCanvas"></canvas>
+    </div>
+
+    <p class="info" style="margin: 5px 0 0 0;">💡 Perubahan teks/slider langsung terlihat di atas.</p>
+  </div>
+
+  <!-- KOTAK FORMULIR DI BAWAH -->
+  <div class="form-container">
+    <h2>Edit Poster Senam</h2>
+    
+    <!-- Form Ganti Background -->
+    <div class="input-group">
+      <label for="inputBg">Ganti Gambar Background:</label>
+      <input type="file" id="inputBg" accept="image/*">
+    </div>
+
+    <hr style="border: 0; border-top: 1px solid #eee; margin: 12px 0;">
+
+    <!-- Form Teks Tanggal -->
+    <div class="input-group">
+      <label for="inputTanggal">Hari & Tanggal:</label>
+      <input type="text" id="inputTanggal" value="Selasa, 25 Agustus 2026">
+    </div>
+    <div class="input-group">
+      <label for="inputPosX1">Geser Kiri-Kanan (Tanggal):</label>
+      <input type="range" id="inputPosX1" min="0" max="100" value="25">
+    </div>
+    <div class="input-group">
+      <label for="inputPosY1">Geser Atas-Bawah (Tanggal):</label>
+      <input type="range" id="inputPosY1" min="0" max="100" value="78">
+    </div>
+
+    <hr style="border: 0; border-top: 1px solid #eee; margin: 12px 0;">
+
+    <!-- Form Teks Waktu -->
+    <div class="input-group">
+      <label for="inputWaktu">Waktu (Pukul):</label>
+      <input type="text" id="inputWaktu" value="Pukul 07.00 WIB">
+    </div>
+    <div class="input-group">
+      <label for="inputPosX2">Geser Kiri-Kanan (Waktu):</label>
+      <input type="range" id="inputPosX2" min="0" max="100" value="25">
+    </div>
+    <div class="input-group">
+      <label for="inputPosY2">Geser Atas-Bawah (Waktu):</label>
+      <input type="range" id="inputPosY2" min="0" max="100" value="83">
+    </div>
+
+    <hr style="border: 0; border-top: 1px solid #eee; margin: 12px 0;">
+
+    <!-- Form Teks Instruktur -->
+    <div class="input-group">
+      <label for="inputInstruktur">Nama Instruktur:</label>
+      <input type="text" id="inputInstruktur" value="Syarifah Supartini">
+    </div>
+    <div class="input-group">
+      <label for="inputPosX3">Geser Kiri-Kanan (Instruktur):</label>
+      <input type="range" id="inputPosX3" min="0" max="100" value="25">
+    </div>
+    <div class="input-group">
+      <label for="inputPosY3">Geser Atas-Bawah (Instruktur):</label>
+      <input type="range" id="inputPosY3" min="0" max="100" value="88">
+    </div>
+
+    <button class="btn" onclick="downloadPoster()">💾 Download Gambar Poster</button>
+  </div>
+
+</div>
+
+<script>
+  const canvas = document.getElementById('posterCanvas');
+  const ctx = canvas.getContext('2d');
+  
+  const inputBg = document.getElementById('inputBg');
+  const inputTanggal = document.getElementById('inputTanggal');
+  const inputPosX1 = document.getElementById('inputPosX1');
+  const inputPosY1 = document.getElementById('inputPosY1');
+
+  const inputWaktu = document.getElementById('inputWaktu');
+  const inputPosX2 = document.getElementById('inputPosX2');
+  const inputPosY2 = document.getElementById('inputPosY2');
+
+  const inputInstruktur = document.getElementById('inputInstruktur');
+  const inputPosX3 = document.getElementById('inputPosX3');
+  const inputPosY3 = document.getElementById('inputPosY3');
+
+  const bg = new Image();
+  bg.src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAVRAwADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAURL#"; 
+
+  function drawPoster() {
+    if (!bg.complete) return;
+
+    canvas.width = bg.naturalWidth || 800;
+    canvas.height = bg.naturalHeight || 1422;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = "#1b4332"; 
+    ctx.textAlign = "left"; 
+    ctx.textBaseline = "middle";
+
+    const fontSizeStandar = Math.round(canvas.width * 0.045); 
+    const fontSizeInstruktur = Math.round(canvas.width * 0.070); 
+
+    // Tanggal
+    ctx.font = `bold ${fontSizeStandar}px 'Segoe UI', Arial, sans-serif`;
+    const posX1 = canvas.width * (inputPosX1.value / 100);
+    const posY1 = canvas.height * (inputPosY1.value / 100);
+    ctx.fillText(inputTanggal.value, posX1, posY1);
+
+    // Waktu
+    ctx.font = `bold ${fontSizeStandar}px 'Segoe UI', Arial, sans-serif`;
+    const posX2 = canvas.width * (inputPosX2.value / 100);
+    const posY2 = canvas.height * (inputPosY2.value / 100);
+    ctx.fillText(inputWaktu.value, posX2, posY2);
+
+    // Instruktur
+    ctx.font = `bold ${fontSizeInstruktur}px 'Segoe UI', Arial, sans-serif`;
+    const posX3 = canvas.width * (inputPosX3.value / 100);
+    const posY3 = canvas.height * (inputPosY3.value / 100);
+    ctx.fillText(inputInstruktur.value, posX3, posY3);
+  }
+
+  bg.onload = drawPoster;
+
+  const inputs = [
+    inputTanggal, inputPosX1, inputPosY1,
+    inputWaktu, inputPosX2, inputPosY2,
+    inputInstruktur, inputPosX3, inputPosY3
+  ];
+
+  inputs.forEach(input => {
+    input.addEventListener('input', drawPoster);
+  });
+
+  inputBg.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        bg.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  function downloadPoster() {
+    const link = document.createElement('a');
+    link.download = 'poster_senam.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  }
+
+  // Fungsi Zoom Preview yang diperbaiki
+  let scaleFactor = 1; 
+
+  function ubahZoom(amount) {
+    scaleFactor += amount;
+    if (scaleFactor < 1) scaleFactor = 1;
+    if (scaleFactor > 3) scaleFactor = 3;
+    
+    canvas.style.width = (scaleFactor * 100) + '%';
+  }
+
+  function resetZoom() {
+    scaleFactor = 1;
+    canvas.style.width = '100%';
+  }
+</script>
+
+</body>
+</html>
